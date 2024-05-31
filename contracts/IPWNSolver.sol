@@ -10,12 +10,12 @@ contract PWNLoan {
     enum LoanState { Offered, Filled, Refunded, Cancelled }
 
     struct Loan {
-        address[] tokenCollateralAddresses;
-        uint256[] tokenCollateralAmounts;
-        uint256[] tokenCollateralIndexes;
-        address[] tokenLoanAddresses;
-        uint256[] tokenLoanAmounts;
-        uint256[] tokenLoanIndexes;
+        address tokenCollateralAddress;
+        uint256 tokenCollateralAmount;
+        uint256 tokenCollateralIndex;
+        address tokenLoanAddress;
+        uint256 tokenLoanAmount;
+        uint256 tokenLoanIndex;
         uint256 durationOfLoanSeconds;
         address advertiser;
         uint256 chainId;
@@ -28,12 +28,12 @@ contract PWNLoan {
     event NewLoanAdvertised(
         uint256 loanID,
         uint256 chainId,
-        address[] tokenCollateralAddresses,
-        uint256[] tokenCollateralAmounts,
-        uint256[] tokenCollateralIndexes,
-        address[] tokenLoanAddresses,
-        uint256[] tokenLoanAmounts,
-        uint256[] tokenLoanIndexes,
+        address tokenCollateralAddress,
+        uint256 tokenCollateralAmount,
+        uint256 tokenCollateralIndex,
+        address tokenLoanAddress,
+        uint256 tokenLoanAmount,
+        uint256 tokenLoanIndex,
         uint256 durationOfLoanSeconds
     );
 
@@ -50,37 +50,25 @@ contract PWNLoan {
     }
 
     function advertiseNewLoan(
-        address[] calldata tokenCollateralAddresses,
-        uint256[] calldata tokenCollateralAmounts,
-        uint256[] calldata tokenCollateralIndexes,
-        address[] calldata tokenLoanAddresses,
-        uint256[] calldata tokenLoanAmounts,
-        uint256[] calldata tokenLoanIndexes,
+        address tokenCollateralAddress,
+        uint256 tokenCollateralAmount,
+        uint256 tokenCollateralIndex,
+        address tokenLoanAddress,
+        uint256 tokenLoanAmount,
+        uint256 tokenLoanIndex,
         uint256 durationOfLoanSeconds,
         uint256 chainId,
         uint256 loanId
     ) public {
-        require(
-            tokenCollateralAddresses.length == tokenCollateralAmounts.length && 
-            tokenCollateralAddresses.length == tokenCollateralIndexes.length,
-            "Collateral array lengths must match"
-        );
-
-        require(
-            tokenLoanAddresses.length == tokenLoanAmounts.length && 
-            tokenLoanAddresses.length == tokenLoanIndexes.length,
-            "Loan array lengths must match"
-        );
-
         bytes32 loanHash = getLoanKey(chainId, loanId);
 
         loans[loanHash] = Loan({
-            tokenCollateralAddresses: tokenCollateralAddresses,
-            tokenCollateralAmounts: tokenCollateralAmounts,
-            tokenCollateralIndexes: tokenCollateralIndexes,
-            tokenLoanAddresses: tokenLoanAddresses,
-            tokenLoanAmounts: tokenLoanAmounts,
-            tokenLoanIndexes: tokenLoanIndexes,
+            tokenCollateralAddress: tokenCollateralAddress,
+            tokenCollateralAmount: tokenCollateralAmount,
+            tokenCollateralIndex: tokenCollateralIndex,
+            tokenLoanAddress: tokenLoanAddress,
+            tokenLoanAmount: tokenLoanAmount,
+            tokenLoanIndex: tokenLoanIndex,
             durationOfLoanSeconds: durationOfLoanSeconds,
             advertiser: msg.sender,
             chainId: chainId,
@@ -91,12 +79,12 @@ contract PWNLoan {
         emit NewLoanAdvertised(
             loanId,
             chainId,
-            tokenCollateralAddresses,
-            tokenCollateralAmounts,
-            tokenCollateralIndexes,
-            tokenLoanAddresses,
-            tokenLoanAmounts,
-            tokenLoanIndexes,
+            tokenCollateralAddress,
+            tokenCollateralAmount,
+            tokenCollateralIndex,
+            tokenLoanAddress,
+            tokenLoanAmount,
+            tokenLoanIndex,
             durationOfLoanSeconds);
     }
 
@@ -130,14 +118,12 @@ contract PWNLoan {
 
         // Transfer collateral tokens to the contract
         // TODO execute a transfer to the PWN contract to fill the loan
-        for (uint256 i = 0; i < loan.tokenLoanAddresses.length; i++) {
-            if (loan.tokenLoanIndexes[i] == NON_NFT) {
-                IERC20 token = IERC20(loan.tokenLoanAddresses[i]);
-                require(token.transferFrom(msg.sender, address(this), loan.tokenLoanAmounts[i]), "ERC20 transfer failed");
-            } else {
-                IERC721 token = IERC721(loan.tokenLoanAddresses[i]);
-                token.safeTransferFrom(msg.sender, address(this), loan.tokenLoanIndexes[i]);
-            }
+        if (loan.tokenLoanIndex == NON_NFT) {
+            IERC20 token = IERC20(loan.tokenLoanAddress);
+            require(token.transferFrom(msg.sender, address(this), loan.tokenLoanAmount), "ERC20 transfer failed");
+        } else {
+            IERC721 token = IERC721(loan.tokenLoanAddress);
+            token.safeTransferFrom(msg.sender, address(this), loan.tokenLoanIndex);
         }
 
         loan.state = LoanState.Filled;
