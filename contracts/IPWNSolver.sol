@@ -4,47 +4,104 @@ pragma solidity ^0.8.0;
 contract PWNLoan {
 
     uint256 constant NON_NFT = type(uint256).max;
-    uint256 public loanCount = 0;
+    enum LoanState { Offered, Filled, Refunded, Cancelled }
 
     struct Loan {
-        address[] tokenAddresses;
-        uint256[] tokenAmounts;
-        uint256[] tokenIndexes;
+        address[] tokenCollateralAddresses;
+        uint256[] tokenCollateralAmounts;
+        uint256[] tokenCollateralIndexes;
+        address[] tokenLoanAddresses;
+        uint256[] tokenLoanAmounts;
+        uint256[] tokenLoanIndexes;
         uint256 durationOfLoanSeconds;
         address advertiser;
+        uint256 chainId;
+        uint256 loanId;
+        LoanState state;
     }
 
-    mapping(uint256 => Loan) public loans;
+    mapping(bytes32 => Loan) public loans;
 
     event NewLoanAdvertised(
-        uint256 loanID,
-        address[] tokenAddresses,
-        uint256[] tokenAmounts,
-        uint256[] tokenIndexes,
+        bytes32 loanID,
+        uint256 chainId,
+        address[] tokenCollateralAddresses,
+        uint256[] tokenCollateralAmounts,
+        uint256[] tokenCollateralIndexes,
+        address[] tokenLoanAddresses,
+        uint256[] tokenLoanAmounts,
+        uint256[] tokenLoanIndexes,
         uint256 durationOfLoanSeconds
     );
 
+    event LoanOfferRevoked(
+        uint256 chainId,
+        uint256 loanId
+    );
+
     function advertiseNewLoan(
-        address[] memory tokenAddresses,
-        uint256[] memory tokenAmounts,
-        uint256[] memory tokenIndexes,
-        uint256 durationOfLoanSeconds
+        address[] calldata tokenCollateralAddresses,
+        uint256[] calldata tokenCollateralAmounts,
+        uint256[] calldata tokenCollateralIndexes,
+        address[] calldata tokenLoanAddresses,
+        uint256[] calldata tokenLoanAmounts,
+        uint256[] calldata tokenLoanIndexes,
+        uint256 durationOfLoanSeconds,
+        uint256 chainId,
+        uint256 loanId
     ) public {
         require(
-            tokenAddresses.length == tokenAmounts.length && 
-            tokenAddresses.length == tokenIndexes.length,
-            "Array lengths must match"
+            tokenCollateralAddresses.length == tokenCollateralAmounts.length && 
+            tokenCollateralAddresses.length == tokenCollateralIndexes.length,
+            "Collateral array lengths must match"
         );
 
-        loans[loanCount] = Loan({
-            tokenAddresses: tokenAddresses,
-            tokenAmounts: tokenAmounts,
-            tokenIndexes: tokenIndexes,
+        require(
+            tokenLoanAddresses.length == tokenLoanAmounts.length && 
+            tokenLoanAddresses.length == tokenLoanIndexes.length,
+            "Loan array lengths must match"
+        );
+
+        bytes32 loanHash = keccak256(abi.encodePacked(chainId, "_", loanId));
+
+        loans[loanHash] = Loan({
+            tokenCollateralAddresses: tokenCollateralAddresses,
+            tokenCollateralAmounts: tokenCollateralAmounts,
+            tokenCollateralIndexes: tokenCollateralIndexes,
+            tokenLoanAddresses: tokenLoanAddresses,
+            tokenLoanAmounts: tokenLoanAmounts,
+            tokenLoanIndexes: tokenLoanIndexes,
             durationOfLoanSeconds: durationOfLoanSeconds,
-            advertiser: msg.sender
+            advertiser: msg.sender,
+            chainId: chainId,
+            loanId: loanId,
+            state: LoanState.Offered
         });
 
-        emit NewLoanAdvertised(loanCount, tokenAddresses, tokenAmounts, tokenIndexes, durationOfLoanSeconds);
-        loanCount++;
+        emit NewLoanAdvertised(
+            loanHash,
+            chainId,
+            tokenCollateralAddresses,
+            tokenCollateralAmounts,
+            tokenCollateralIndexes,
+            tokenLoanAddresses,
+            tokenLoanAmounts,
+            tokenLoanIndexes,
+            durationOfLoanSeconds);
+    }
+
+    function revokeLoanOffer(
+        uint256 chainId,
+        uint256 loanId
+    ) public {
+        bytes32 loanHash = keccak256(abi.encodePacked(chainId, "_", loanId));
+        Loan storage loan = loans[loanHash];
+
+        require(loan.advertiser == msg.sender, "Only the advertiser can revoke the loan offer");
+        require(loan.state == LoanState.Offered, "Loan offer cannot be revoked");
+
+        loan.state = LoanState.Cancelled;
+
+        emit LoanOfferRevoked(chainId, loanId);
     }
 }
