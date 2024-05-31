@@ -52,7 +52,7 @@ contract PWNLoan {
         return keccak256(abi.encodePacked(chainId, "_", loanId));
     }
 
-    function getLoan(uint256 chainId, uint256 loanId) public pure returns(Loan) {
+    function getLoan(uint256 chainId, uint256 loanId) public view returns (Loan memory) {
         bytes32 loanHash = getLoanKey(chainId, loanId);
         return loans[loanHash];
     }
@@ -133,8 +133,7 @@ contract PWNLoan {
         require(loan.state == LoanState.Offered, "Loan is not available for fulfillment");
 
         // Transfer collateral tokens to the contract
-        // TODO execute a transfer to the PWN contract to fill the loan
-        if(loan.tokenLoanIndex == 0x0000000000000000000000000000000000000000) {
+        if(loan.tokenLoanAddress == 0x0000000000000000000000000000000000000000) {
             // Native token
             require(msg.value == loan.tokenLoanAmount, "Incorrect tx value");
         }
@@ -157,8 +156,9 @@ contract PWNLoan {
         uint256 chainId,
         uint256 loanId
     ) public {
-        
+
         bytes32 loanHash = getLoanKey(chainId, loanId);
+        Loan storage loan = loans[loanHash];
         require(loan.state == LoanState.Filled, "Loan not filled");
         require(loan.filler == msg.sender, "Only loan sender can reclaim");
 
