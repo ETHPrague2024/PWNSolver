@@ -49,6 +49,11 @@ contract PWNLoan {
         return keccak256(abi.encodePacked(chainId, "_", loanId));
     }
 
+    function getLoan(uint256 chainId, uint256 loanId) public pure returns(Loan) {
+        bytes32 loanHash = getLoanKey(chainId, loanId);
+        return loans[loanHash];
+    }
+
     function advertiseNewLoan(
         address tokenCollateralAddress,
         uint256 tokenCollateralAmount,
@@ -60,7 +65,11 @@ contract PWNLoan {
         uint256 chainId,
         uint256 loanId
     ) public {
+
         bytes32 loanHash = getLoanKey(chainId, loanId);
+
+        // Check if the loanHash already exists
+        require(loans[loanHash].advertiser == address(0), "Loan already exists");
 
         loans[loanHash] = Loan({
             tokenCollateralAddress: tokenCollateralAddress,
@@ -106,7 +115,7 @@ contract PWNLoan {
     function fulfillLoan(
         uint256 chainId,
         uint256 loanId
-    ) public {
+    ) public payable {
         // This is not the right chain to fill this loan on
         // TODO - make this x-chain, for now reject fills for other chains
         require(block.chainid == chainId, "Invalid chain ID");
@@ -118,10 +127,16 @@ contract PWNLoan {
 
         // Transfer collateral tokens to the contract
         // TODO execute a transfer to the PWN contract to fill the loan
-        if (loan.tokenLoanIndex == NON_NFT) {
+        if(loan.tokenLoanIndex == 0x0000000000000000000000000000000000000000) {
+            // Native token
+            require(msg.value == loan.tokenLoanAmount, "Incorrect tx value");
+        }
+        else if (loan.tokenLoanIndex == NON_NFT) {
+            // ERC20 token
             IERC20 token = IERC20(loan.tokenLoanAddress);
             require(token.transferFrom(msg.sender, address(this), loan.tokenLoanAmount), "ERC20 transfer failed");
         } else {
+            // ERC 721 token
             IERC721 token = IERC721(loan.tokenLoanAddress);
             token.safeTransferFrom(msg.sender, address(this), loan.tokenLoanIndex);
         }
