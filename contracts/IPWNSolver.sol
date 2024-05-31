@@ -21,6 +21,7 @@ contract PWNLoan is IERC721Receiver {
 
     address constant LOAN_TERMS_CONTRACT = address(0x9Cb87eC6448299aBc326F32d60E191Ef32Ab225D);
     uint256 constant NON_NFT = type(uint256).max;
+    bytes constant EMPTY_BYTES = "";
     enum LoanState { Offered, Filled, Refunded, Cancelled, Claimed }
 
     struct Loan {
@@ -95,7 +96,6 @@ contract PWNLoan is IERC721Receiver {
 
         bytes32 loanHash = getLoanKey(chainId, loanId);
 
-        // Check if the loanHash already exists
         require(loans[loanHash].advertiser == address(0), "Loan already exists");
 
         loans[loanHash] = Loan({
@@ -124,7 +124,8 @@ contract PWNLoan is IERC721Receiver {
             tokenLoanAmount,
             tokenLoanIndex,
             tokenLoanRepaymentAmount,
-            durationOfLoanSeconds);
+            durationOfLoanSeconds
+        );
     }
 
     function revokeLoanOffer(
@@ -138,17 +139,15 @@ contract PWNLoan is IERC721Receiver {
         require(loan.state == LoanState.Offered, "Loan offer cannot be revoked");
 
         loan.state = LoanState.Cancelled;
-
         emit LoanOfferRevoked(loanId);
     }
 
     function fulfillLoan(
         uint256 chainId,
         uint256 loanId,
-        bytes signature,
-        bytes loanTermsData
+        bytes calldata signature,
+        bytes calldata loanTermsData
     ) public payable {
-        // This is not the right chain to fill this loan on
         require(block.chainid == chainId, "Invalid chain ID");
 
         bytes32 loanHash = getLoanKey(chainId, loanId);
@@ -160,8 +159,8 @@ contract PWNLoan is IERC721Receiver {
             LOAN_TERMS_CONTRACT,
             loanTermsData,
             signature,
-            bytes(0x00),
-            bytes(0x00)
+            EMPTY_BYTES,
+            EMPTY_BYTES
         );
 
         loan.state = LoanState.Filled;
@@ -202,19 +201,10 @@ contract PWNLoan is IERC721Receiver {
             isLoanNFT
         );
 
-        // Transfer tokens to the advertiser based on balance change
         if ((finalCollateralBalance - initialCollateralBalance) == loan.tokenCollateralAmount) {
-            if (isCollateralNFT) {
-                IERC721(loan.tokenCollateralAddress).safeTransferFrom(address(this), loan.advertiser, loan.tokenCollateralIndex);
-            } else {
-                IERC20(loan.tokenCollateralAddress).transfer(loan.advertiser, loan.tokenCollateralAmount);
-            }
+            transferCollateral(loan.tokenCollateralAddress, loan.tokenCollateralIndex, loan.tokenCollateralAmount, isCollateralNFT, loan.advertiser);
         } else if ((finalLoanBalance - initialLoanBalance) == loan.tokenLoanRepaymentAmount) {
-            if (isLoanNFT) {
-                IERC721(loan.tokenLoanAddress).safeTransferFrom(address(this), loan.advertiser, loan.tokenLoanIndex);
-            } else {
-                IERC20(loan.tokenLoanAddress).transfer(loan.advertiser, loan.tokenLoanRepaymentAmount);
-            }
+            transferLoan(loan.tokenLoanAddress, loan.tokenLoanIndex, loan.tokenLoanRepaymentAmount, isLoanNFT, loan.advertiser);
         } else {
             revert("Invalid token balance change");
         }
@@ -233,6 +223,7 @@ contract PWNLoan is IERC721Receiver {
     ) internal view returns (uint256, uint256) {
         uint256 collateralBalance;
         uint256 loanBalance;
+
         if (isCollateralNFT) {
             collateralBalance = IERC721(tokenCollateralAddress).ownerOf(tokenCollateralIndex) == address(this) ? 1 : 0;
         } else {
@@ -246,6 +237,34 @@ contract PWNLoan is IERC721Receiver {
         }
 
         return (collateralBalance, loanBalance);
+    }
+
+    function transferCollateral(
+        address tokenCollateralAddress,
+        uint256 tokenCollateralIndex,
+        uint256 tokenCollateralAmount,
+        bool isCollateralNFT,
+        address to
+    ) internal {
+        if (isCollateralNFT) {
+            IERC721(tokenCollateralAddress).safeTransferFrom(address(this), to, tokenCollateralIndex);
+        } else {
+            IERC20(tokenCollateralAddress).transfer(to, tokenCollateralAmount);
+        }
+    }
+
+    function transferLoan(
+        address tokenLoanAddress,
+        uint256 tokenLoanIndex,
+        uint256 tokenLoanRepaymentAmount,
+        bool isLoanNFT,
+        address to
+    ) internal {
+        if (isLoanNFT) {
+            IERC721(tokenLoanAddress).safeTransferFrom(address(this), to, tokenLoanIndex);
+        } else {
+            IERC20(tokenLoanAddress).transfer(to, tokenLoanRepaymentAmount);
+        }
     }
 
     function onERC721Received(
