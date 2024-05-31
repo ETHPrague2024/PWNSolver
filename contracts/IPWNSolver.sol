@@ -16,8 +16,10 @@ contract PWNLoan {
         address tokenLoanAddress;
         uint256 tokenLoanAmount;
         uint256 tokenLoanIndex;
+        uint256 tokenLoanRepaymentAmount;
         uint256 durationOfLoanSeconds;
         address advertiser;
+        address filler;
         uint256 chainId;
         uint256 loanId;
         LoanState state;
@@ -34,6 +36,7 @@ contract PWNLoan {
         address tokenLoanAddress,
         uint256 tokenLoanAmount,
         uint256 tokenLoanIndex,
+        uint256 tokenLoanRepaymentAmount,
         uint256 durationOfLoanSeconds
     );
 
@@ -61,6 +64,7 @@ contract PWNLoan {
         address tokenLoanAddress,
         uint256 tokenLoanAmount,
         uint256 tokenLoanIndex,
+        uint256 tokenLoanRepaymentAmount,
         uint256 durationOfLoanSeconds,
         uint256 chainId,
         uint256 loanId
@@ -78,8 +82,10 @@ contract PWNLoan {
             tokenLoanAddress: tokenLoanAddress,
             tokenLoanAmount: tokenLoanAmount,
             tokenLoanIndex: tokenLoanIndex,
+            tokenLoanRepaymentAmount : tokenLoanRepaymentAmount,
             durationOfLoanSeconds: durationOfLoanSeconds,
             advertiser: msg.sender,
+            filler: address(0),
             chainId: chainId,
             loanId: loanId,
             state: LoanState.Offered
@@ -94,6 +100,7 @@ contract PWNLoan {
             tokenLoanAddress,
             tokenLoanAmount,
             tokenLoanIndex,
+            tokenLoanRepaymentAmount,
             durationOfLoanSeconds);
     }
 
@@ -142,6 +149,23 @@ contract PWNLoan {
         }
 
         loan.state = LoanState.Filled;
+        loan.filler = msg.sender;
         emit LoanFilled(loanId);
     }
+
+    function claimOverdueLoanCollateral(
+        uint256 chainId,
+        uint256 loanId
+    ) public {
+        
+        bytes32 loanHash = getLoanKey(chainId, loanId);
+        require(loan.state == LoanState.Filled, "Loan not filled");
+        require(loan.filler == msg.sender, "Only loan sender can reclaim");
+
+        // TODO store time at which the loan was filled?
+        //      and then check whether enough time has passed
+        //      to initiate a claim on loan inventory?
+        require(false, "unimplemented");
+    }
+
 }
