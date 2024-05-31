@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 contract PWNLoan {
 
     uint256 constant NON_NFT = type(uint256).max;
@@ -23,7 +26,7 @@ contract PWNLoan {
     mapping(bytes32 => Loan) public loans;
 
     event NewLoanAdvertised(
-        bytes32 loanID,
+        uint256 loanID,
         uint256 chainId,
         address[] tokenCollateralAddresses,
         uint256[] tokenCollateralAmounts,
@@ -34,10 +37,17 @@ contract PWNLoan {
         uint256 durationOfLoanSeconds
     );
 
-    event LoanOfferRevoked(
-        uint256 chainId,
+    event LoanFilled(
         uint256 loanId
     );
+
+    event LoanOfferRevoked(
+        uint256 loanId
+    );
+
+    function getLoanKey(uint256 chainId, uint256 loanId) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(chainId, "_", loanId));
+    }
 
     function advertiseNewLoan(
         address[] calldata tokenCollateralAddresses,
@@ -62,7 +72,7 @@ contract PWNLoan {
             "Loan array lengths must match"
         );
 
-        bytes32 loanHash = keccak256(abi.encodePacked(chainId, "_", loanId));
+        bytes32 loanHash = getLoanKey(chainId, loanId);
 
         loans[loanHash] = Loan({
             tokenCollateralAddresses: tokenCollateralAddresses,
@@ -79,7 +89,7 @@ contract PWNLoan {
         });
 
         emit NewLoanAdvertised(
-            loanHash,
+            loanId,
             chainId,
             tokenCollateralAddresses,
             tokenCollateralAmounts,
@@ -94,7 +104,7 @@ contract PWNLoan {
         uint256 chainId,
         uint256 loanId
     ) public {
-        bytes32 loanHash = keccak256(abi.encodePacked(chainId, "_", loanId));
+        bytes32 loanHash = getLoanKey(chainId, loanId);
         Loan storage loan = loans[loanHash];
 
         require(loan.advertiser == msg.sender, "Only the advertiser can revoke the loan offer");
@@ -102,6 +112,35 @@ contract PWNLoan {
 
         loan.state = LoanState.Cancelled;
 
-        emit LoanOfferRevoked(chainId, loanId);
+        emit LoanOfferRevoked(loanId);
+    }
+
+    function fulfillLoan(
+        uint256 chainId,
+        uint256 loanId
+    ) public {
+        // This is not the right chain to fill this loan on
+        // TODO - make this x-chain, for now reject fills for other chains
+        require(block.chainid == chainId, "Invalid chain ID");
+
+        bytes32 loanHash = getLoanKey(chainId, loanId);
+        Loan storage loan = loans[loanHash];
+
+        require(loan.state == LoanState.Offered, "Loan is not available for fulfillment");
+
+        // Transfer collateral tokens to the contract
+        // TODO execute a transfer to the PWN contract to fill the loan
+        for (uint256 i = 0; i < loan.tokenLoanAddresses.length; i++) {
+            if (loan.tokenLoanIndexes[i] == NON_NFT) {
+                IERC20 token = IERC20(loan.tokenLoanAddresses[i]);
+                require(token.transferFrom(msg.sender, address(this), loan.tokenLoanAmounts[i]), "ERC20 transfer failed");
+            } else {
+                IERC721 token = IERC721(loan.tokenLoanAddresses[i]);
+                token.safeTransferFrom(msg.sender, address(this), loan.tokenLoanIndexes[i]);
+            }
+        }
+
+        loan.state = LoanState.Filled;
+        emit LoanFilled(loanId);
     }
 }
