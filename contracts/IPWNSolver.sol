@@ -4,10 +4,23 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+interface IPWNSimpleLoan {
+    function createLOAN(
+        address loanTermsFactoryContract,
+        bytes calldata loanTermsFactoryData,
+        bytes calldata signature,
+        bytes calldata loanAssetPermit,
+        bytes calldata collateralPermit
+    ) external returns (uint256 loanId);
+
+    function claimLOAN(uint256 loanId) external;
+}
+
 contract PWNLoan {
 
+    address constant LOAN_TERMS_CONTRACT = address(0x9Cb87eC6448299aBc326F32d60E191Ef32Ab225D);
     uint256 constant NON_NFT = type(uint256).max;
-    enum LoanState { Offered, Filled, Refunded, Cancelled }
+    enum LoanState { Offered, Filled, Refunded, Cancelled, Claimed }
 
     struct Loan {
         address tokenCollateralAddress;
@@ -26,6 +39,7 @@ contract PWNLoan {
     }
 
     mapping(bytes32 => Loan) public loans;
+    IPWNSimpleLoan public pwnSimpleLoan;
 
     event NewLoanAdvertised(
         uint256 loanID,
@@ -47,6 +61,14 @@ contract PWNLoan {
     event LoanOfferRevoked(
         uint256 loanId
     );
+
+    event LoanClaimed(
+        uint256 loanId
+    );
+
+    constructor() {
+        pwnSimpleLoan = IPWNSimpleLoan(0x4188C513fd94B0458715287570c832d9560bc08a);
+    }
 
     function getLoanKey(uint256 chainId, uint256 loanId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(chainId, "_", loanId));
@@ -121,7 +143,9 @@ contract PWNLoan {
 
     function fulfillLoan(
         uint256 chainId,
-        uint256 loanId
+        uint256 loanId,
+        bytes signature,
+        bytes loanTermsData
     ) public payable {
         // This is not the right chain to fill this loan on
         // TODO - make this x-chain, for now reject fills for other chains
@@ -132,40 +156,38 @@ contract PWNLoan {
 
         require(loan.state == LoanState.Offered, "Loan is not available for fulfillment");
 
-        // Transfer collateral tokens to the contract
-        if(loan.tokenLoanAddress == 0x0000000000000000000000000000000000000000) {
-            // Native token
-            require(msg.value == loan.tokenLoanAmount, "Incorrect tx value");
-        }
-        else if (loan.tokenLoanIndex == NON_NFT) {
-            // ERC20 token
-            IERC20 token = IERC20(loan.tokenLoanAddress);
-            require(token.transferFrom(msg.sender, address(this), loan.tokenLoanAmount), "ERC20 transfer failed");
-        } else {
-            // ERC 721 token
-            IERC721 token = IERC721(loan.tokenLoanAddress);
-            token.safeTransferFrom(msg.sender, address(this), loan.tokenLoanIndex);
-        }
+        pwnSimpleLoan.createLOAN(
+            LOAN_TERMS_CONTRACT,
+            loanTermsData,
+            signature,
+            bytes(0x00),
+            bytes(0x00)
+        );
 
         loan.state = LoanState.Filled;
         loan.filler = msg.sender;
         emit LoanFilled(loanId);
     }
 
-    function claimOverdueLoanCollateral(
+    function claimLoan(
         uint256 chainId,
         uint256 loanId
     ) public {
-
         bytes32 loanHash = getLoanKey(chainId, loanId);
         Loan storage loan = loans[loanHash];
-        require(loan.state == LoanState.Filled, "Loan not filled");
-        require(loan.filler == msg.sender, "Only loan sender can reclaim");
 
-        // TODO store time at which the loan was filled?
-        //      and then check whether enough time has passed
-        //      to initiate a claim on loan inventory?
-        require(false, "unimplemented");
+        require(loan.state == LoanState.Filled, "Loan is not available for claiming");
+        require(loan.advertiser == msg.sender, "Only the solver who initiated the loan can claim it");
+
+        //TODO: balance check here for both types of tokens (erc20, erc721) for both collateralAddress and loanAddress from the loan struct
+        pwnSimpleLoan.claimLOAN(loanId);
+        //TODO: balance check here for both types of tokens (erc20, erc721) for both collateralAddress and loanAddress from the loan struct
+
+        // TODO: transfer the tokens (based on which balance increased by the correct amount (if collateral or loan) specified in loan struct, if amount doesnt match revert) to the advertiser address
+
+        loan.state = LoanState.Claimed;
+        emit LoanClaimed(loanId);
     }
-
 }
+
+// TODO: add on fallback to be able to receive LOAN nft tokens 
