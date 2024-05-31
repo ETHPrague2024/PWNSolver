@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 interface IPWNSimpleLoan {
     function createLOAN(
@@ -16,7 +17,7 @@ interface IPWNSimpleLoan {
     function claimLOAN(uint256 loanId) external;
 }
 
-contract PWNLoan {
+contract PWNLoan is IERC721Receiver {
 
     address constant LOAN_TERMS_CONTRACT = address(0x9Cb87eC6448299aBc326F32d60E191Ef32Ab225D);
     uint256 constant NON_NFT = type(uint256).max;
@@ -104,7 +105,7 @@ contract PWNLoan {
             tokenLoanAddress: tokenLoanAddress,
             tokenLoanAmount: tokenLoanAmount,
             tokenLoanIndex: tokenLoanIndex,
-            tokenLoanRepaymentAmount : tokenLoanRepaymentAmount,
+            tokenLoanRepaymentAmount: tokenLoanRepaymentAmount,
             durationOfLoanSeconds: durationOfLoanSeconds,
             advertiser: msg.sender,
             filler: address(0),
@@ -148,7 +149,6 @@ contract PWNLoan {
         bytes loanTermsData
     ) public payable {
         // This is not the right chain to fill this loan on
-        // TODO - make this x-chain, for now reject fills for other chains
         require(block.chainid == chainId, "Invalid chain ID");
 
         bytes32 loanHash = getLoanKey(chainId, loanId);
@@ -177,17 +177,83 @@ contract PWNLoan {
         Loan storage loan = loans[loanHash];
 
         require(loan.state == LoanState.Filled, "Loan is not available for claiming");
-        require(loan.advertiser == msg.sender, "Only the solver who initiated the loan can claim it");
+        require(loan.advertiser == msg.sender, "Only the advertiser can claim the loan");
 
-        //TODO: balance check here for both types of tokens (erc20, erc721) for both collateralAddress and loanAddress from the loan struct
+        bool isCollateralNFT = loan.tokenCollateralIndex != NON_NFT;
+        bool isLoanNFT = loan.tokenLoanIndex != NON_NFT;
+
+        (uint256 initialCollateralBalance, uint256 initialLoanBalance) = checkBalances(
+            loan.tokenCollateralAddress,
+            loan.tokenCollateralIndex,
+            loan.tokenLoanAddress,
+            loan.tokenLoanIndex,
+            isCollateralNFT,
+            isLoanNFT
+        );
+
         pwnSimpleLoan.claimLOAN(loanId);
-        //TODO: balance check here for both types of tokens (erc20, erc721) for both collateralAddress and loanAddress from the loan struct
 
-        // TODO: transfer the tokens (based on which balance increased by the correct amount (if collateral or loan) specified in loan struct, if amount doesnt match revert) to the advertiser address
+        (uint256 finalCollateralBalance, uint256 finalLoanBalance) = checkBalances(
+            loan.tokenCollateralAddress,
+            loan.tokenCollateralIndex,
+            loan.tokenLoanAddress,
+            loan.tokenLoanIndex,
+            isCollateralNFT,
+            isLoanNFT
+        );
+
+        // Transfer tokens to the advertiser based on balance change
+        if ((finalCollateralBalance - initialCollateralBalance) == loan.tokenCollateralAmount) {
+            if (isCollateralNFT) {
+                IERC721(loan.tokenCollateralAddress).safeTransferFrom(address(this), loan.advertiser, loan.tokenCollateralIndex);
+            } else {
+                IERC20(loan.tokenCollateralAddress).transfer(loan.advertiser, loan.tokenCollateralAmount);
+            }
+        } else if ((finalLoanBalance - initialLoanBalance) == loan.tokenLoanRepaymentAmount) {
+            if (isLoanNFT) {
+                IERC721(loan.tokenLoanAddress).safeTransferFrom(address(this), loan.advertiser, loan.tokenLoanIndex);
+            } else {
+                IERC20(loan.tokenLoanAddress).transfer(loan.advertiser, loan.tokenLoanRepaymentAmount);
+            }
+        } else {
+            revert("Invalid token balance change");
+        }
 
         loan.state = LoanState.Claimed;
         emit LoanClaimed(loanId);
     }
-}
 
-// TODO: add on fallback to be able to receive LOAN nft tokens 
+    function checkBalances(
+        address tokenCollateralAddress,
+        uint256 tokenCollateralIndex,
+        address tokenLoanAddress,
+        uint256 tokenLoanIndex,
+        bool isCollateralNFT,
+        bool isLoanNFT
+    ) internal view returns (uint256, uint256) {
+        uint256 collateralBalance;
+        uint256 loanBalance;
+        if (isCollateralNFT) {
+            collateralBalance = IERC721(tokenCollateralAddress).ownerOf(tokenCollateralIndex) == address(this) ? 1 : 0;
+        } else {
+            collateralBalance = IERC20(tokenCollateralAddress).balanceOf(address(this));
+        }
+
+        if (isLoanNFT) {
+            loanBalance = IERC721(tokenLoanAddress).ownerOf(tokenLoanIndex) == address(this) ? 1 : 0;
+        } else {
+            loanBalance = IERC20(tokenLoanAddress).balanceOf(address(this));
+        }
+
+        return (collateralBalance, loanBalance);
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
