@@ -28,11 +28,11 @@ We have wrapped the PWN protocol in an intent centric wrapper which enables this
 
 A summary of system interactions by time is shown below using colour coding and terms defined by the [CAKE framework](https://medium.com/@wunderlichvalentin/introducing-the-cake-framework-5a442b9cc725) proposed by Ankit Chiplunkar and Stephane Gosselin.
 
-IMG
+<img width="1364" alt="image" src="https://github.com/ETHPrague2024/PWNSolver/assets/21056525/cb4f21e2-c5b5-44f8-8a6c-b7ae01965e1a">
 
 ## Borrower requesting a loan / mortgage
 
-IMG from pwn
+<img width="932" alt="image" src="https://github.com/ETHPrague2024/PWNSolver/assets/21056525/c85f7b58-8076-475d-8e02-999d96ae5e29">
 
 * A borrower will visit the PWN app and select the collateral and loan terms going through the existing flow
 * Once a loan request has been created a watcher picks up the details from the API and records it in the PWN intent adaptor contract by calling `advertiseNewLoan`. This raises an event on-chain `NewLoanAdvertised` which serves as an intent expression.
@@ -48,6 +48,10 @@ Section about how this works
 * If a solver chooses to supply inventory for a loan, it will call fulfillLoan on the PWN intent adaptor contract.
 * Within the same transaction, the PWN intent adaptor (assuming the loan is open, hasn't been cancelled or already fulfilled) will transfer the inventory required to satisfy the loan and forward this to the PWN contract by calling `createLOAN`.
 * Depending on the destination chain requested in the loan, the Solver will execute the fulfilment call on whichever chain is required directly without requiring a bridge or relying on a cross chain message passing mechanism.
+
+
+![image](https://github.com/ETHPrague2024/PWNSolver/assets/21056525/32516c4a-638a-4bb0-874b-8f1f16b4365c)
+Example of how the exanple Solver detects and fills a loan across multiple chains.
 
 ## User repaying or defaulting
 
