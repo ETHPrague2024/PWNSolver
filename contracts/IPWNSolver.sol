@@ -172,6 +172,8 @@ contract PWNLoan is IERC721Receiver {
         uint256 chainId,
         uint256 loanId
     ) public {
+        require(block.chainid == chainId, "Invalid chain ID");
+
         bytes32 loanHash = getLoanKey(chainId, loanId);
         Loan storage loan = loans[loanHash];
 

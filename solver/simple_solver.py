@@ -1,6 +1,9 @@
 from web3 import Web3, HTTPProvider
 from web3.middleware import geth_poa_middleware
 
+import time
+from datetime import datetime
+
 chain_contract_abi = [{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanFilled","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanOfferRevoked","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanID","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"chainId","type":"uint256"},{"indexed":False,"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"indexed":False,"internalType":"address","name":"tokenLoanAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"}],"name":"NewLoanAdvertised","type":"event"},{"inputs":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"advertiseNewLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"fulfillLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"loans","outputs":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"address","name":"advertiser","type":"address"},{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"enum PWNLoan.LoanState","name":"state","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"revokeLoanOffer","outputs":[],"stateMutability":"nonpayable","type":"function"}]
 rpc_url_sepolia = "https://sepolia.infura.io/v3/791e2242a4194fb4aa2e431c350b8bf3"
 
@@ -10,6 +13,8 @@ sepolia_testnet_chainid = 11155111
 
 wallet_sepolia_user_pub = "0x347D03041d4Dbb2b61144275E28FDc31ACb89722"
 wallet_sepolia_user_prv = "e894145ac0c444e3c43b131f6771bac1da08824e8a451ed3e800ed4ff97a8452"
+
+pending_loan_claims = []
 
 def handle_event(event):
     print(f"🌟 Event detected: {event['event']} ")
@@ -100,33 +105,58 @@ def submit_loan_fill(args):
     signed_transaction = w3.eth.account.sign_transaction(transaction_data, wallet_sepolia_user_prv)
     transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 
+    pending_loan = {
+        "claimed": False,
+        "claim_timestamp": 0,
+        "chain_id":0,
+        "loan_id":0
+    }
+
+    pending_loan_claims.append(pending_loan)
+    args['durationOfLoanSeconds']
+
     print(f"✅ Transaction sent. Transaction Hash: {transaction_hash.hex()}")
 
-def submit_loan_fill_test():
-    print("🤖 SOLVER: Submitting loan fill bid for intent..")
+def claim_loan(args):
+    # Assumed we are waiting to begin with
+    num_waiting_claims = 1
+    while num_waiting_claims > 0:
+        time.sleep(2)
+        num_waiting_claims = 0
 
-    w3 = Web3(HTTPProvider(rpc_url_sepolia))
+        for pending_loan_claim in pending_loan_claims:
+            if pending_loan_claim['claimed'] is True:
+                continue
+            if pending_loan_claim['claim_timestamp'] > datetime.now():
+                print(f"⌛ loan [{args['loanID']}] not yet claimable")
+                num_waiting_claims += 1
+                continue
 
-    contract = w3.eth.contract(address=contract_address_sepolia, abi=chain_contract_abi)
+            # Else claim
+            print(f"⌛ Attempting to claim loan that has expired..")
+            w3 = Web3(HTTPProvider(rpc_url_sepolia))
 
-    account_address = wallet_sepolia_user_pub
-    nonce = w3.eth.get_transaction_count(account_address)
+            contract = w3.eth.contract(address=contract_address_sepolia, abi=chain_contract_abi)
 
-    transaction_data = contract.functions.fulfillLoan(
-        100,
-        50
-    ).build_transaction({
-        'from': account_address,
-        'gas': 2000000,
-        'gasPrice': w3.to_wei('20', 'gwei'),
-        'nonce': nonce,
-        'value': 0
-    })
+            account_address = wallet_sepolia_user_pub
+            nonce = w3.eth.get_transaction_count(account_address)
 
-    signed_transaction = w3.eth.account.sign_transaction(transaction_data, wallet_sepolia_user_prv)
-    transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            transaction_data = contract.functions.claimLoan(
+                args['chainId'],
+                args['loanID']
+            ).build_transaction({
+                'from': account_address,
+                'gas': 2000000,
+                'gasPrice': w3.to_wei('20', 'gwei'),
+                'nonce': nonce,
+                'value': 0
+            })
 
-    print(f"✅ Loan transaction sent. Transaction Hash: {transaction_hash.hex()}")
+            signed_transaction = w3.eth.account.sign_transaction(transaction_data, wallet_sepolia_user_prv)
+            transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+
+            print(f"✅ Claim transaction sent. Transaction Hash: {transaction_hash.hex()}")
+        
 
 def main():
     print("")
@@ -140,6 +170,7 @@ def main():
         if should_loan:
             print("🤖 SOLVER: decided to loan funds ✅")
             submit_loan_fill(args)
+            claim_loan(args)
         else:
             print("🤖 SOLVER: decided NOT to loan funds ❌")
         print("")
