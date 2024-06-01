@@ -43,8 +43,13 @@ interface IPWNSimpleLoanSimpleRequest {
     function encodeLoanTermsFactoryData(Request memory request) external pure returns (bytes memory);
 }
 
+interface IPWNLOAN {
+    function lastLoanId() external view returns (uint256);
+}
+
 contract PWNLoan is IERC721Receiver {
     address constant LOAN_TERMS_CONTRACT = address(0x9Cb87eC6448299aBc326F32d60E191Ef32Ab225D);
+    address constant PWNLOAN_CONTRACT = address(0x4440C069272cC34b80C7B11bEE657D0349Ba9C23);
     uint256 constant NON_NFT = type(uint256).max;
     bytes constant EMPTY_BYTES = "";
     enum LoanState { Offered, Filled, Cancelled, Claimed, OutcomeOtherChain }
@@ -69,12 +74,14 @@ contract PWNLoan is IERC721Receiver {
         uint256 nonce;
         uint256 chainIdLoan;
         uint256 loanId;
+        uint256 onchainLoadId;
         LoanState state;
     }
 
     mapping(bytes32 => Loan) public loans;
     IPWNSimpleLoan public pwnSimpleLoan;
     IPWNSimpleLoanSimpleRequest public pwnSimpleLoanSimpleRequest;
+    IPWNLOAN public loanNFT;
 
     event NewLoanAdvertised(
         address borrowerAddress,
@@ -105,6 +112,7 @@ contract PWNLoan is IERC721Receiver {
     constructor() {
         pwnSimpleLoan = IPWNSimpleLoan(0x4188C513fd94B0458715287570c832d9560bc08a);
         pwnSimpleLoanSimpleRequest = IPWNSimpleLoanSimpleRequest(LOAN_TERMS_CONTRACT);
+        loanNFT = IPWNLOAN(PWNLOAN_CONTRACT);
     }
 
     function getLoanKey(uint256 chainId, uint256 loanId) internal pure returns (bytes32) {
@@ -157,14 +165,15 @@ contract PWNLoan is IERC721Receiver {
             filler: address(0),
             chainIdLoan: chainIdLoan,
             loanId: loanId,
-            state: LoanState.Offered,
+            state: state,
             tokenCollateralCategory: tokenCollateralCategory,
             tokenCollateralId: tokenCollateralId,
             loanYield: loanYield,
             expiration: uint40(expiration),
             borrower: borrower,
             nonce: nonce,
-            signature: signature
+            signature: signature,
+            onchainLoadId: 0
         });
 
         emit NewLoanAdvertised(
@@ -257,6 +266,7 @@ contract PWNLoan is IERC721Receiver {
             loan.state = LoanState.Filled;
             loan.filler = msg.sender;
 
+            loan.onchainLoadId = loanNFT.lastLoanId();
         } else {
             // x-chain
 
@@ -299,7 +309,7 @@ contract PWNLoan is IERC721Receiver {
             isLoanNFT
         );
 
-        pwnSimpleLoan.claimLOAN(loanId);
+        pwnSimpleLoan.claimLOAN(loan.onchainLoadId);
 
         (uint256 finalCollateralBalance, uint256 finalLoanBalance) = checkBalances(
             loan.tokenCollateralAddress,
