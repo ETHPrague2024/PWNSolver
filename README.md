@@ -66,25 +66,25 @@ Example of how the exanple Solver detects and fills a loan across multiple chain
 [Mortgage solution on PWN](https://ducttapeevents.notion.site/PWN-dcc9d2c5ec8c43a6a080997b92a56ce7)
 
 Intent adaptor contracts:
-* Sepolia :
-* Holsky :
+* Sepolia : [0x0cb8f458ee463674ccc190dda4067f136ada69c2](https://sepolia.etherscan.io/address/0x0cb8f458ee463674ccc190dda4067f136ada69c2)
+* Holsky : [0xa93f9e2ca26af5dbc1538e56b031c367bd200c89](https://holesky.beaconcha.in/address/0xa93f9e2ca26af5dbc1538e56b031c367bd200c89)
 
 (other chains) ..
 
 ## Polygon 
 [Polygon Cardona Bounty](https://ducttapeevents.notion.site/Polygon-f9931bc76a1d4701b52a59ff5edc223e)
 
-Polygon Cardona : XXX
+Polygon Cardona : [0x7b6aceC5eA36DD5ef5b0639B8C1d0Dab59DdcF03](https://cardona-zkevm.polygonscan.com/address/0x7b6aceC5eA36DD5ef5b0639B8C1d0Dab59DdcF03)
 
 ## Linea
 [Build a dapp on Linea](https://ducttapeevents.notion.site/Linea-5b99a158b4744716a1d446b669e65f55)
 
-Linea : XXX
+Linea : [0x4dc36fcc192c042fc49fe934d86e8942d79c4e93](https://sepolia.lineascan.build/address/0x4dc36fcc192c042fc49fe934d86e8942d79c4e93)
 
 ## Mantle
 [Best DeFi project](https://ducttapeevents.notion.site/Mantle-46e53bc8290242d897a1337cfabded62)
 
-Mantle : XXX
+Mantle : [0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93](https://explorer.sepolia.mantle.xyz/address/0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93)
 
 ## The Graph
 
