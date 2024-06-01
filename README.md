@@ -40,7 +40,7 @@ A summary of system interactions by time is shown below using colour coding and 
 
 ## Credit risker evaluates risk of loan
 
-Section about how this works
+🏗️ Section about how this works 🏗️
 
 ## Solver assessing risk and underwriting loan
 
@@ -90,8 +90,10 @@ Mantle : XXX
 
 [Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
 
-Deployed subgraph: XXX
-Subgraph code: XXX
+Deployed subgraph: https://thegraph.com/studio/subgraph/pwn-graph/
+
+Subgraph code: https://github.com/ETHPrague2024/thegraph
+
 How the subgraph is used:
 
-Indexed PWN contracts to calculate and assess credit history of address requesting a loan portfolio. Calculation of credit metrics probability of default, loss exposure default and loss given default, taking these methodologies from traditional financial system best practicies to drive decision making within the Solver as to which loans to underwrite.
+🏗️ Indexed PWN contracts to calculate and assess credit history of address requesting a loan portfolio. Calculation of credit metrics probability of default, loss exposure default and loss given default, taking these methodologies from traditional financial system best practicies to drive decision making within the Solver as to which loans to underwrite. 🏗️
