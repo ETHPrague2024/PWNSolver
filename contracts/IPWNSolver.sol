@@ -44,6 +44,7 @@ contract PWNLoan is IERC721Receiver {
     IPWNSimpleLoan public pwnSimpleLoan;
 
     event NewLoanAdvertised(
+        address borrowerAddress,
         uint256 loanID,
         uint256 chainIdLoan,
         address tokenCollateralAddress,
@@ -82,6 +83,7 @@ contract PWNLoan is IERC721Receiver {
     }
 
     function advertiseNewLoan(
+        address borrowerAddress,
         address tokenCollateralAddress,
         uint256 tokenCollateralAmount,
         uint256 tokenCollateralIndex,
@@ -120,6 +122,7 @@ contract PWNLoan is IERC721Receiver {
         });
 
         emit NewLoanAdvertised(
+            borrowerAddress,
             loanId,
             chainIdLoan,
             tokenCollateralAddress,
