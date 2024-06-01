@@ -3,7 +3,7 @@ from web3.middleware import geth_poa_middleware
 
 import time
 
-chain_contract_abi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanClaimed","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanFilled","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanOfferRevoked","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"indexed":False,"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"indexed":False,"internalType":"address","name":"tokenLoanAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"}],"name":"NewLoanAdvertised","type":"event"},{"inputs":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"advertiseNewLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainIdCollateral","type":"uint256"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"claimLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainIdCollateral","type":"uint256"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"bytes","name":"signature","type":"bytes"},{"internalType":"bytes","name":"loanTermsData","type":"bytes"}],"name":"fulfillLoan","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"getLoan","outputs":[{"components":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"address","name":"advertiser","type":"address"},{"internalType":"address","name":"filler","type":"address"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"enum PWNLoan.LoanState","name":"state","type":"uint8"}],"internalType":"struct PWNLoan.Loan","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"loans","outputs":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"address","name":"advertiser","type":"address"},{"internalType":"address","name":"filler","type":"address"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"enum PWNLoan.LoanState","name":"state","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"onERC721Received","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"pwnSimpleLoan","outputs":[{"internalType":"contract IPWNSimpleLoan","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainIdCollateral","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"revokeLoanOffer","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+chain_contract_abi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanClaimed","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanFilled","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanOfferRevoked","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"address","name":"borrowerAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"loanID","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"indexed":False,"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"indexed":False,"internalType":"address","name":"tokenLoanAddress","type":"address"},{"indexed":False,"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"}],"name":"NewLoanAdvertised","type":"event"},{"inputs":[{"internalType":"address","name":"borrowerAddress","type":"address"},{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"advertiseNewLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainIdCollateral","type":"uint256"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"claimLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainIdCollateral","type":"uint256"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"bytes","name":"signature","type":"bytes"},{"internalType":"bytes","name":"loanTermsData","type":"bytes"}],"name":"fulfillLoan","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"getLoan","outputs":[{"components":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"address","name":"advertiser","type":"address"},{"internalType":"address","name":"filler","type":"address"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"enum PWNLoan.LoanState","name":"state","type":"uint8"}],"internalType":"struct PWNLoan.Loan","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"loans","outputs":[{"internalType":"address","name":"tokenCollateralAddress","type":"address"},{"internalType":"uint256","name":"tokenCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"tokenCollateralIndex","type":"uint256"},{"internalType":"address","name":"tokenLoanAddress","type":"address"},{"internalType":"uint256","name":"tokenLoanAmount","type":"uint256"},{"internalType":"uint256","name":"tokenLoanIndex","type":"uint256"},{"internalType":"uint256","name":"tokenLoanRepaymentAmount","type":"uint256"},{"internalType":"uint256","name":"durationOfLoanSeconds","type":"uint256"},{"internalType":"address","name":"advertiser","type":"address"},{"internalType":"address","name":"filler","type":"address"},{"internalType":"uint256","name":"chainIdLoan","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"enum PWNLoan.LoanState","name":"state","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"onERC721Received","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"pwnSimpleLoan","outputs":[{"internalType":"contract IPWNSimpleLoan","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"chainIdCollateral","type":"uint256"},{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"revokeLoanOffer","outputs":[],"stateMutability":"nonpayable","type":"function"}]
 
 wallet_sepolia_user_pub = "0x347D03041d4Dbb2b61144275E28FDc31ACb89722"
 wallet_sepolia_user_prv = "e894145ac0c444e3c43b131f6771bac1da08824e8a451ed3e800ed4ff97a8452"
@@ -11,12 +11,12 @@ wallet_sepolia_user_prv = "e894145ac0c444e3c43b131f6771bac1da08824e8a451ed3e800e
 chain_details = { 
     11155111: {
         "name": "Sepolia",
-        "contract" : Web3.to_checksum_address("0xb0c1b4715be387921B92bAa8D1bd9e6a99BB6FA1"),
+        "contract" : Web3.to_checksum_address("0x3c05f4027a670d82f3a372b77abb01c2be727332"),
         "rpc": "https://sepolia.infura.io/v3/791e2242a4194fb4aa2e431c350b8bf3"
     },
     17000: {
         "name": "Holsky",
-        "contract" : Web3.to_checksum_address("0x35461b3ba63aa1764b46778570d8e369ea3cff86"),
+        "contract" : Web3.to_checksum_address("0xE2246Fc87b4E6dac9EA97C0965b03D74DBFBaeF4"),
         "rpc": "https://holesky.infura.io/v3/791e2242a4194fb4aa2e431c350b8bf3"
     }
 }
@@ -60,7 +60,7 @@ def decide_whether_to_loan_funds(args):
 
     return True
 
-def set_allowance(w3, private_key, args, spender):
+def set_allowance(w3, private_key, args, spender, destination_chain):
     token_contract_address = args['tokenLoanAddress']
     allowance_amount = args['tokenLoanAmount']
     
@@ -79,7 +79,7 @@ def set_allowance(w3, private_key, args, spender):
     signed_transaction = w3.eth.account.sign_transaction(tx, private_key=private_key)
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    print(f"✅ Allowance transaction sent. Transaction Hash: {receipt['transactionHash'].hex()}")
+    print(f"✅ Allowance tx sent chain [{destination_chain}]. Transaction Hash: {receipt['transactionHash'].hex()}")
 
 def submit_loan_fill(args):
     destination_chain = args['chainIdLoan']
@@ -94,7 +94,7 @@ def submit_loan_fill(args):
     else:
         # set allowance on ERC20 tokens so the contract can take the funds
         print("🤖 SOLVER: Setting token allowance for fill..")
-        set_allowance(w3, wallet_sepolia_user_prv, args, chain_details[destination_chain]['contract'])
+        set_allowance(w3, wallet_sepolia_user_prv, args, chain_details[destination_chain]['contract'], destination_chain)
 
     # TODO handle the case where the loan is an NFT
 
@@ -110,7 +110,7 @@ def submit_loan_fill(args):
     transaction_data = contract.functions.fulfillLoan(
         chainIdCollateral,
         args['chainIdLoan'],
-        args['loanId'],
+        args['loanID'],
         signature,
         loanTermsData
     ).build_transaction({
@@ -129,12 +129,12 @@ def submit_loan_fill(args):
         "claimed": False,
         "claim_timestamp": time.time() + args['durationOfLoanSeconds'],
         "chain_id": chainIdCollateral,
-        "loan_id": args['loanId']
+        "loan_id": args['loanID']
     }
 
     pending_loan_claims.append(pending_loan)
 
-    print(f"✅ Transaction sent. Transaction Hash: {receipt['transactionHash'].hex()}")
+    print(f"✅ Tx sent chain [{destination_chain}]. Transaction Hash: {receipt['transactionHash'].hex()}")
 
 def claim_loan(args):
     # Assumed we are waiting to begin with
@@ -147,7 +147,7 @@ def claim_loan(args):
             if pending_loan_claim['claimed'] is True:
                 continue
             if pending_loan_claim['claim_timestamp'] > time.time():
-                print(f"⌛ loan [{args['loanId']}] not yet claimable..")
+                print(f"⌛ loan [{args['loanID']}] not yet claimable..")
                 num_waiting_claims += 1
                 continue
 
@@ -165,7 +165,7 @@ def claim_loan(args):
             transaction_data = contract.functions.claimLoan(
                 chainIdCollateral,
                 args['chainIdLoan'],
-                args['loanId']
+                args['loanID']
             ).build_transaction({
                 'from': account_address,
                 'gas': 2000000,
@@ -177,7 +177,7 @@ def claim_loan(args):
             signed_transaction = w3.eth.account.sign_transaction(transaction_data, wallet_sepolia_user_prv)
             transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 
-            print(f"✅ Claim transaction sent. Transaction Hash: {transaction_hash.hex()}")
+            print(f"✅ Claim tx sent chain [{chainIdCollateral}]. Transaction Hash: {transaction_hash.hex()}")
         
 
 def main():
