@@ -22,7 +22,7 @@ contract PWNLoan is IERC721Receiver {
     address constant LOAN_TERMS_CONTRACT = address(0x9Cb87eC6448299aBc326F32d60E191Ef32Ab225D);
     uint256 constant NON_NFT = type(uint256).max;
     bytes constant EMPTY_BYTES = "";
-    enum LoanState { Offered, Filled, Refunded, Cancelled, Claimed }
+    enum LoanState { Offered, Filled, Cancelled, Claimed, OutcomeOtherChain }
 
     struct Loan {
         address tokenCollateralAddress;
@@ -35,7 +35,7 @@ contract PWNLoan is IERC721Receiver {
         uint256 durationOfLoanSeconds;
         address advertiser;
         address filler;
-        uint256 chainId;
+        uint256 chainIdLoan;
         uint256 loanId;
         LoanState state;
     }
@@ -45,7 +45,7 @@ contract PWNLoan is IERC721Receiver {
 
     event NewLoanAdvertised(
         uint256 loanID,
-        uint256 chainId,
+        uint256 chainIdLoan,
         address tokenCollateralAddress,
         uint256 tokenCollateralAmount,
         uint256 tokenCollateralIndex,
@@ -90,13 +90,18 @@ contract PWNLoan is IERC721Receiver {
         uint256 tokenLoanIndex,
         uint256 tokenLoanRepaymentAmount,
         uint256 durationOfLoanSeconds,
-        uint256 chainId,
+        uint256 chainIdLoan,
         uint256 loanId
     ) public {
 
-        bytes32 loanHash = getLoanKey(chainId, loanId);
+        bytes32 loanHash = getLoanKey(block.chainid, loanId);
 
         require(loans[loanHash].advertiser == address(0), "Loan already exists");
+
+        LoanState state = LoanState.Offered;
+        if (block.chainid != chainIdLoan) {
+            state = LoanState.OutcomeOtherChain;
+        }
 
         loans[loanHash] = Loan({
             tokenCollateralAddress: tokenCollateralAddress,
@@ -109,14 +114,14 @@ contract PWNLoan is IERC721Receiver {
             durationOfLoanSeconds: durationOfLoanSeconds,
             advertiser: msg.sender,
             filler: address(0),
-            chainId: chainId,
+            chainIdLoan: chainIdLoan,
             loanId: loanId,
-            state: LoanState.Offered
+            state: state
         });
 
         emit NewLoanAdvertised(
             loanId,
-            chainId,
+            chainIdLoan,
             tokenCollateralAddress,
             tokenCollateralAmount,
             tokenCollateralIndex,
@@ -129,11 +134,15 @@ contract PWNLoan is IERC721Receiver {
     }
 
     function revokeLoanOffer(
-        uint256 chainId,
+        uint256 chainIdCollateral,
         uint256 loanId
     ) public {
-        bytes32 loanHash = getLoanKey(chainId, loanId);
+        bytes32 loanHash = getLoanKey(chainIdCollateral, loanId);
         Loan storage loan = loans[loanHash];
+
+        // Limitation - no atomicity between source and destination chain so 
+        // disallow revoking of offers since we can't tell the state of the loan
+        require(block.chainid == loan.chainIdLoan, "Filling is on another chain, unable to revoke");
 
         require(loan.advertiser == msg.sender, "Only the advertiser can revoke the loan offer");
         require(loan.state == LoanState.Offered, "Loan offer cannot be revoked");
@@ -143,42 +152,61 @@ contract PWNLoan is IERC721Receiver {
     }
 
     function fulfillLoan(
-        uint256 chainId,
+        uint256 chainIdCollateral,
+        uint256 chainIdLoan,
         uint256 loanId,
         bytes calldata signature,
         bytes calldata loanTermsData
     ) public payable {
-        require(block.chainid == chainId, "Invalid chain ID");
+        if (chainIdCollateral == chainIdLoan) {
+            // same chain
+            require(block.chainid == chainIdCollateral, "Wrong chain");
+  
+            bytes32 loanHash = getLoanKey(chainIdCollateral, loanId);
+            Loan storage loan = loans[loanHash];
 
-        bytes32 loanHash = getLoanKey(chainId, loanId);
-        Loan storage loan = loans[loanHash];
+            require(block.chainid == loan.chainIdLoan, "Filling is on another chain, unable to fill");
+            require(loan.state == LoanState.Offered, "Loan offer not in a state to be filled");
 
-        require(loan.state == LoanState.Offered, "Loan is not available for fulfillment");
+            pwnSimpleLoan.createLOAN(
+                LOAN_TERMS_CONTRACT,
+                loanTermsData,
+                signature,
+                EMPTY_BYTES,
+                EMPTY_BYTES
+            );
 
-        pwnSimpleLoan.createLOAN(
-            LOAN_TERMS_CONTRACT,
-            loanTermsData,
-            signature,
-            EMPTY_BYTES,
-            EMPTY_BYTES
-        );
+            loan.state = LoanState.Filled;
+            loan.filler = msg.sender;
 
-        loan.state = LoanState.Filled;
-        loan.filler = msg.sender;
+        } else {
+            // x-chain
+
+            require(block.chainid == chainIdLoan, "Wrong chain");
+
+            // TODO : we can't create the loan on this chain since PWN doesn't currently
+            // support x-chain loans, however we would call into the pwn contract here
+            // to initialise the loan and supply the inventory
+        }
+
         emit LoanFilled(loanId);
     }
 
     function claimLoan(
-        uint256 chainId,
+        uint256 chainIdCollateral,
+        uint256 chainIdLoan,
         uint256 loanId
     ) public {
-        require(block.chainid == chainId, "Invalid chain ID");
+        // NOTE: assumption here is that claiming always is initiated on the source chain
+        // meaning if a loan has defaulted the collateral is supplied directly OR if a loan
+        // has been repaid, this triggers a PWN process which credits the funds on the destination chain
 
-        bytes32 loanHash = getLoanKey(chainId, loanId);
+        require(block.chainid == chainIdCollateral, "Invalid chain ID");
+
+        bytes32 loanHash = getLoanKey(chainIdCollateral, loanId);
         Loan storage loan = loans[loanHash];
 
         require(loan.state == LoanState.Filled, "Loan is not available for claiming");
-        require(loan.advertiser == msg.sender, "Only the advertiser can claim the loan");
 
         bool isCollateralNFT = loan.tokenCollateralIndex != NON_NFT;
         bool isLoanNFT = loan.tokenLoanIndex != NON_NFT;
@@ -212,6 +240,7 @@ contract PWNLoan is IERC721Receiver {
         }
 
         loan.state = LoanState.Claimed;
+
         emit LoanClaimed(loanId);
     }
 
