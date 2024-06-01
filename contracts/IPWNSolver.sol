@@ -17,8 +17,33 @@ interface IPWNSimpleLoan {
     function claimLOAN(uint256 loanId) external;
 }
 
-contract PWNLoan is IERC721Receiver {
+interface IPWNSimpleLoanSimpleRequest {
+    enum Category {
+        ERC20,
+        ERC721,
+        ERC1155,
+        CryptoKitties
+    }
 
+    struct Request {
+        Category collateralCategory;
+        address collateralAddress;
+        uint256 collateralId;
+        uint256 collateralAmount;
+        address loanAssetAddress;
+        uint256 loanAmount;
+        uint256 loanYield;
+        uint32 duration;
+        uint40 expiration;
+        address borrower;
+        address lender;
+        uint256 nonce;
+    }
+
+    function encodeLoanTermsFactoryData(Request memory request) external pure returns (bytes memory);
+}
+
+contract PWNLoan is IERC721Receiver {
     address constant LOAN_TERMS_CONTRACT = address(0x9Cb87eC6448299aBc326F32d60E191Ef32Ab225D);
     uint256 constant NON_NFT = type(uint256).max;
     bytes constant EMPTY_BYTES = "";
@@ -28,13 +53,20 @@ contract PWNLoan is IERC721Receiver {
         address tokenCollateralAddress;
         uint256 tokenCollateralAmount;
         uint256 tokenCollateralIndex;
+        IPWNSimpleLoanSimpleRequest.Category tokenCollateralCategory;
+        uint256 tokenCollateralId;
         address tokenLoanAddress;
         uint256 tokenLoanAmount;
         uint256 tokenLoanIndex;
         uint256 tokenLoanRepaymentAmount;
-        uint256 durationOfLoanSeconds;
+        uint256 loanYield;
+        uint32 durationOfLoanSeconds;
+        uint40 expiration;
+        address borrower;
         address advertiser;
         address filler;
+        bytes signature;
+        uint256 nonce;
         uint256 chainIdLoan;
         uint256 loanId;
         LoanState state;
@@ -42,6 +74,7 @@ contract PWNLoan is IERC721Receiver {
 
     mapping(bytes32 => Loan) public loans;
     IPWNSimpleLoan public pwnSimpleLoan;
+    IPWNSimpleLoanSimpleRequest public pwnSimpleLoanSimpleRequest;
 
     event NewLoanAdvertised(
         address borrowerAddress,
@@ -71,6 +104,7 @@ contract PWNLoan is IERC721Receiver {
 
     constructor() {
         pwnSimpleLoan = IPWNSimpleLoan(0x4188C513fd94B0458715287570c832d9560bc08a);
+        pwnSimpleLoanSimpleRequest = IPWNSimpleLoanSimpleRequest(LOAN_TERMS_CONTRACT);
     }
 
     function getLoanKey(uint256 chainId, uint256 loanId) internal pure returns (bytes32) {
@@ -83,7 +117,6 @@ contract PWNLoan is IERC721Receiver {
     }
 
     function advertiseNewLoan(
-        address borrowerAddress,
         address tokenCollateralAddress,
         uint256 tokenCollateralAmount,
         uint256 tokenCollateralIndex,
@@ -93,9 +126,15 @@ contract PWNLoan is IERC721Receiver {
         uint256 tokenLoanRepaymentAmount,
         uint256 durationOfLoanSeconds,
         uint256 chainIdLoan,
-        uint256 loanId
+        uint256 loanId,
+        IPWNSimpleLoanSimpleRequest.Category tokenCollateralCategory,
+        uint256 tokenCollateralId,
+        uint256 loanYield,
+        uint256 expiration,
+        address borrower,
+        uint256 nonce,
+        bytes memory signature
     ) public {
-
         bytes32 loanHash = getLoanKey(block.chainid, loanId);
 
         require(loans[loanHash].advertiser == address(0), "Loan already exists");
@@ -113,16 +152,23 @@ contract PWNLoan is IERC721Receiver {
             tokenLoanAmount: tokenLoanAmount,
             tokenLoanIndex: tokenLoanIndex,
             tokenLoanRepaymentAmount: tokenLoanRepaymentAmount,
-            durationOfLoanSeconds: durationOfLoanSeconds,
+            durationOfLoanSeconds: uint32(durationOfLoanSeconds),
             advertiser: msg.sender,
             filler: address(0),
             chainIdLoan: chainIdLoan,
             loanId: loanId,
-            state: state
+            state: LoanState.Offered,
+            tokenCollateralCategory: tokenCollateralCategory,
+            tokenCollateralId: tokenCollateralId,
+            loanYield: loanYield,
+            expiration: uint40(expiration),
+            borrower: borrower,
+            nonce: nonce,
+            signature: signature
         });
 
         emit NewLoanAdvertised(
-            borrowerAddress,
+            borrower,
             loanId,
             chainIdLoan,
             tokenCollateralAddress,
@@ -157,9 +203,7 @@ contract PWNLoan is IERC721Receiver {
     function fulfillLoan(
         uint256 chainIdCollateral,
         uint256 chainIdLoan,
-        uint256 loanId,
-        bytes calldata signature,
-        bytes calldata loanTermsData
+        uint256 loanId
     ) public payable {
         if (chainIdCollateral == chainIdLoan) {
             // same chain
@@ -171,10 +215,41 @@ contract PWNLoan is IERC721Receiver {
             require(block.chainid == loan.chainIdLoan, "Filling is on another chain, unable to fill");
             require(loan.state == LoanState.Offered, "Loan offer not in a state to be filled");
 
+            IPWNSimpleLoanSimpleRequest.Request memory request = IPWNSimpleLoanSimpleRequest.Request({
+                collateralCategory: loan.tokenCollateralCategory,
+                collateralAddress: loan.tokenCollateralAddress,
+                collateralId: loan.tokenCollateralId,
+                collateralAmount: loan.tokenCollateralAmount,
+                loanAssetAddress: loan.tokenLoanAddress,
+                loanAmount: loan.tokenLoanAmount,
+                loanYield: loan.loanYield,
+                duration: loan.durationOfLoanSeconds,
+                expiration: loan.expiration,
+                borrower: loan.borrower,
+                lender: address(0),
+                nonce: loan.nonce
+            });
+
+            bytes memory loanTermsData = pwnSimpleLoanSimpleRequest.encodeLoanTermsFactoryData(request);
+
+            if (loan.tokenLoanIndex == NON_NFT) {
+                // ERC20 token
+                IERC20 token = IERC20(loan.tokenLoanAddress);
+                require(token.transferFrom(msg.sender, address(this), loan.tokenLoanAmount), "ERC20 transfer failed");
+
+                token.approve(address(0x4188C513fd94B0458715287570c832d9560bc08a), loan.tokenLoanAmount);
+            } else {
+                // ERC 721 token
+                IERC721 token = IERC721(loan.tokenLoanAddress);
+                token.safeTransferFrom(msg.sender, address(this), loan.tokenLoanIndex);
+
+                token.setApprovalForAll(address(0x4188C513fd94B0458715287570c832d9560bc08a), true);
+            }
+
             pwnSimpleLoan.createLOAN(
                 LOAN_TERMS_CONTRACT,
                 loanTermsData,
-                signature,
+                loan.signature,
                 EMPTY_BYTES,
                 EMPTY_BYTES
             );
@@ -210,6 +285,7 @@ contract PWNLoan is IERC721Receiver {
         Loan storage loan = loans[loanHash];
 
         require(loan.state == LoanState.Filled, "Loan is not available for claiming");
+        require(loan.advertiser == msg.sender, "Only the advertiser can claim the loan");
 
         bool isCollateralNFT = loan.tokenCollateralIndex != NON_NFT;
         bool isLoanNFT = loan.tokenLoanIndex != NON_NFT;
@@ -243,7 +319,6 @@ contract PWNLoan is IERC721Receiver {
         }
 
         loan.state = LoanState.Claimed;
-
         emit LoanClaimed(loanId);
     }
 
