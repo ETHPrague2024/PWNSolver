@@ -18,7 +18,7 @@ Reversing the polarity of Banks with x-chain Intents. Made with ❤️ in Prague
     - NOTE: this extends the base functionality assuming PWN emits loan offers with loan token requests on different chains, for now this part is simulated in the code to work around this limitation
 
 * Mechanism for assessing credit worthiness of borrowers based on chain activity and collateral supplied
-    - using The Graph to index PWN contracts to assess credit history of portolio and calculate credit metrics probability of default, loss exposure default and loss given default, taking these methodologies from traditional financial system best practicies
+    - using The Graph to index PWN contracts to assess credit history of portolio and calculate credit metrics probability of default, exposure at default and loss given default, taking these methodologies from traditional financial system best practicies
 
 # Overview
 
@@ -40,7 +40,11 @@ A summary of system interactions by time is shown below using colour coding and 
 
 ## Credit risker evaluates risk of loan
 
-To evaluate the risk of the loan, an expert model was created. The risk parameters used include the user's on-chain data such as the first transaction date, the number of tokens held, the current value, the total value of transactions, and NFTs. Accounts with more activity and funds receive a higher rating. This data is obtained from Etherscan. Customers with the worst rating (5) will unfortunately be rejected from granting the loan. In the future, more advanced credit scoring models could potentially be used.
+To calculate the risk of loans, we have adopted metrics and ideas from traditional finance. Using The Graph, we indexed the entire history of loans. This data allows us to calculate crucial risk metrics such as observed default rate, loss given default, and exposure at default. In traditional finance, these metrics are essential for risk management of a portfolio and for calculating capital and provisions. They provide a deeper understanding of the risk and potential losses for liquidity providers (LPs).
+
+With this indexed data, we developed a model to calculate the probability of default for potential loans using logistic regression. This model, trained on historical data, helps predict the likelihood of default for each loan. This information enables LPs to better understand and assess the potential risk of loans before making decisions.
+
+Additionally, we created an expert model to calculate a credit score for loan applicants, which aids the solver in making more data-driven decisions. The risk parameters considered include the user's on-chain data such as the first transaction date, the number of tokens held, the current value of holdings, the total value of transactions, and NFTs. Accounts with more activity and funds receive higher ratings. This data is obtained from Etherscan. Customers with the lowest rating (5) will unfortunately be rejected for loans. In the future, we plan to incorporate more advanced credit scoring models.
 
 ## Solver assessing risk and underwriting loan
 
