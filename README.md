@@ -46,6 +46,7 @@ To calculate loan risk, we've incorporated traditional finance metrics and added
  - On-Chain Credit Scores: By analyzing on-chain data, we calculate credit scores to facilitate data-driven decisions for **new loan** funding.
 
 Using The Graph, we indexed the entire history of loans. This data allows us to calculate crucial risk metrics such as observed default rate, loss given default, and exposure at default. In traditional finance, these metrics are essential for risk management of a portfolio and for calculating capital and provisions. They provide a deeper understanding of the risk and potential losses for liquidity providers (LPs).
+
 ![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/9e4754cb-027c-4dac-8a1d-8a93df0c28b3)
 
 With this indexed data, we developed a model to calculate the probability of default for potential loans using logistic regression. This model, trained on historical data, helps predict the likelihood of default for each loan. This information enables LPs to better understand and assess the potential risk of loans before making decisions.
@@ -98,9 +99,9 @@ Mantle : [0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93](https://explorer.sepolia.m
 
 ## The Graph
 
-[Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
-
 ![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/3640fb91-b9c9-48f3-9223-820ece632fee)
+
+[Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
 
 Deployed subgraph: https://testnet.thegraph.com/explorer/subgraphs/GWRoHvkHuuih5ims2RraW4TH5Vn2cnftifv1FLWF2dvE?view=Overview&chain=arbitrum-sepolia
 
