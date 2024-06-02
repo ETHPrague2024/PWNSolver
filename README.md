@@ -118,8 +118,9 @@ Deployed subgraph: https://testnet.thegraph.com/explorer/subgraphs/GWRoHvkHuuih5
 Subgraph code: https://github.com/ETHPrague2024/thegraph/tree/main/pwn-graph
 
 How the subgraph is used:
-The subgraph indexes the entire history of loans from PWN contracts, serving two key purposes:
+The subgraph indexes the entire history of loans from PWN contracts, serving three key purposes:
 - Portfolio Credit Risk Assessment: Historical data from The Graph is used to calculate traditional risk metrics such as probability of default, loss given default, and exposure at default, following best practices from the traditional financial system.
 - PD Model Training: Historical data is utilized to train a model that predicts the probability of default for potential new loans, enhancing risk assessment capabilities.
+- Accessibility and Innovation: The subgraph allows anyone, anywhere to access indexed historical PWN data and build on top of the protocol, fostering future development and innovation.
 
 
