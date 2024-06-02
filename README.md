@@ -17,8 +17,8 @@ Reversing the polarity of Banks with x-chain Intents. Made with ❤️ in Prague
 * Support for supplying PWN loans cross chain
     - NOTE: this extends the base functionality assuming PWN emits loan offers with loan token requests on different chains, for now this part is simulated in the code to work around this limitation
 
-* Mechanism for assessing credit worthiness of borrowers based on chain activity and collateral supplied
-    - using The Graph to index PWN contracts to assess credit history of portolio and calculate credit metrics probability of default, loss exposure default and loss given default, taking these methodologies from traditional financial system best practicies
+* Mechanism for assessing credit risk of borrowers and whole portfolio based on chain activity and collateral supplied
+    - using The Graph to index PWN contracts to assess credit history of portolio and calculate credit risk metrics, based on traditional financial system best practicies, plus developed logistic regression model to predict default probabilities (trained on real data) and create credit scores expert model for better lending decisions
 
 # Overview
 
@@ -40,7 +40,18 @@ A summary of system interactions by time is shown below using colour coding and 
 
 ## Credit risker evaluates risk of loan
 
-🏗️ Section about how this works 🏗️
+To calculate loan risk, we've incorporated traditional finance metrics and added three core features:
+ - Portfolio Credit Risk Metrics: Using The Graph to gather the entire transaction history, we calculate metrics to monitor and manage the risk of **existed loans**, providing valuable insights for LPs.
+ - PD Model for New Loans: We trained a logistic regression model on historical data to evaluate the probability of default (PD) for **new loans**, offering LPs a clearer understanding of loan risk.
+ - On-Chain Credit Scores: By analyzing on-chain data, we calculate credit scores to facilitate data-driven decisions for **new loan** funding.
+
+Using The Graph, we indexed the entire history of loans. This data allows us to calculate crucial risk metrics such as observed default rate, loss given default, and exposure at default. In traditional finance, these metrics are essential for risk management of a portfolio and for calculating capital and provisions. They provide a deeper understanding of the risk and potential losses for liquidity providers (LPs).
+
+![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/9e4754cb-027c-4dac-8a1d-8a93df0c28b3)
+
+With this indexed data, we developed a model to calculate the probability of default for potential loans using logistic regression. This model, trained on historical data, helps predict the likelihood of default for each loan. This information enables LPs to better understand and assess the potential risk of loans before making decisions.
+
+Additionally, we created an expert model to calculate a credit score for loan applicants, which aids the solver in making more data-driven decisions. The risk parameters considered include the user's on-chain data such as the first transaction date, the number of tokens held, the current value of holdings, the total value of transactions, and NFTs. Accounts with more activity and funds receive higher ratings. This data is obtained from Etherscan. Customers with the lowest rating (5) will unfortunately be rejected for loans. In the future, we plan to incorporate more advanced credit scoring models.
 
 ## Solver assessing risk and underwriting loan
 
@@ -93,12 +104,17 @@ Optimism : [0x0E293e65a871Bf3bdF6DB2924407DC94D0410BFB](https://sepolia-optimism
 
 ## The Graph
 
+![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/3640fb91-b9c9-48f3-9223-820ece632fee)
+
 [Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
 
-Deployed subgraph: https://thegraph.com/studio/subgraph/pwn-graph/
+Deployed subgraph: https://testnet.thegraph.com/explorer/subgraphs/GWRoHvkHuuih5ims2RraW4TH5Vn2cnftifv1FLWF2dvE?view=Overview&chain=arbitrum-sepolia
 
-Subgraph code: https://github.com/ETHPrague2024/thegraph
+Subgraph code: https://github.com/ETHPrague2024/thegraph/tree/main/pwn-graph
 
 How the subgraph is used:
+The subgraph indexes the entire history of loans from PWN contracts, serving two key purposes:
+- Portfolio Credit Risk Assessment: Historical data from The Graph is used to calculate traditional risk metrics such as probability of default, loss given default, and exposure at default, following best practices from the traditional financial system.
+- PD Model Training: Historical data is utilized to train a model that predicts the probability of default for potential new loans, enhancing risk assessment capabilities.
 
-🏗️ Indexed PWN contracts to calculate and assess credit history of address requesting a loan portfolio. Calculation of credit metrics probability of default, loss exposure default and loss given default, taking these methodologies from traditional financial system best practicies to drive decision making within the Solver as to which loans to underwrite. 🏗️
+
