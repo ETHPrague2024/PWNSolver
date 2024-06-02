@@ -53,6 +53,8 @@ Using The Graph, we indexed the entire history of loans. This data allows us to 
 
 With this indexed data, we developed a model to calculate the probability of default for potential loans using logistic regression. This model, trained on historical data, helps predict the likelihood of default for each loan. This information enables LPs to better understand and assess the potential risk of loans before making decisions.
 
+![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/0ef69517-7adb-4a3b-8d81-5ea524c63050)
+
 Additionally, we created an expert model to calculate a credit score for loan applicants, which aids the solver in making more data-driven decisions. The risk parameters considered include the user's on-chain data such as the first transaction date, the number of tokens held, the current value of holdings, the total value of transactions, and NFTs. Accounts with more activity and funds receive higher ratings. This data is obtained from Etherscan. Customers with the lowest rating (5) will unfortunately be rejected for loans. In the future, we plan to incorporate more advanced credit scoring models.
 
 ### Solver assessing risk and underwriting loan
