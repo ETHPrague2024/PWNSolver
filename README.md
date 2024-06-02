@@ -26,11 +26,13 @@ Intent centric approaches to web3 design create big unlocks for UX and can simpl
 
 We have wrapped the PWN protocol in an intent centric wrapper which enables this improved UX when loans are communicated directly on chain by the protocol or via an observer that queries the API and supplies the matchable loans to the intent adaptor contract. The mechanism by which Solvers compete to underwrite a loan also greatly simplifies implementing cross chain execution by removing the need for an explicit underlying synchronisation mechanism created by using a message passing bridge.
 
+## Interactions
+
 A summary of system interactions by time is shown below using colour coding and terms defined by the [CAKE framework](https://medium.com/@wunderlichvalentin/introducing-the-cake-framework-5a442b9cc725) proposed by Ankit Chiplunkar and Stephane Gosselin.
 
 <img width="1364" alt="image" src="https://github.com/ETHPrague2024/PWNSolver/assets/21056525/cb4f21e2-c5b5-44f8-8a6c-b7ae01965e1a">
 
-## Borrower requesting a loan / mortgage
+### Borrower requesting a loan / mortgage
 
 <img width="932" alt="image" src="https://github.com/ETHPrague2024/PWNSolver/assets/21056525/c85f7b58-8076-475d-8e02-999d96ae5e29">
 
@@ -38,7 +40,7 @@ A summary of system interactions by time is shown below using colour coding and 
 * Once a loan request has been created a watcher picks up the details from the API and records it in the PWN intent adaptor contract by calling `advertiseNewLoan`. This raises an event on-chain `NewLoanAdvertised` which serves as an intent expression.
 * Within this event are all the terms of the loan including collateral types and amounts, maturity dates and requested loan details including which chain the loan is being requested on.
 
-## Credit risker evaluates risk of loan
+### Credit risker evaluates risk of loan
 
 To calculate loan risk, we've incorporated traditional finance metrics and added three core features:
  - Portfolio Credit Risk Metrics: Using The Graph to gather the entire transaction history, we calculate metrics to monitor and manage the risk of **existed loans**, providing valuable insights for LPs.
@@ -51,7 +53,7 @@ With this indexed data, we developed a model to calculate the probability of def
 
 Additionally, we created an expert model to calculate a credit score for loan applicants, which aids the solver in making more data-driven decisions. The risk parameters considered include the user's on-chain data such as the first transaction date, the number of tokens held, the current value of holdings, the total value of transactions, and NFTs. Accounts with more activity and funds receive higher ratings. This data is obtained from Etherscan. Customers with the lowest rating (5) will unfortunately be rejected for loans. In the future, we plan to incorporate more advanced credit scoring models.
 
-## Solver assessing risk and underwriting loan
+### Solver assessing risk and underwriting loan
 
 * Solvers are constantly watching new blocks for `NewLoanAdvertised`, when a new loan request is detected, they will run logic to determine whether the loan is acceptable to them based on the terms and the risk scoring provided by the Credit Risker.
 * If a solver chooses to supply inventory for a loan, it will call fulfillLoan on the PWN intent adaptor contract.
@@ -62,11 +64,29 @@ Additionally, we created an expert model to calculate a credit score for loan ap
 ![image](https://github.com/ETHPrague2024/PWNSolver/assets/21056525/32516c4a-638a-4bb0-874b-8f1f16b4365c)
 Example of how the exanple Solver detects and fills a loan across multiple chains.
 
-## User repaying or defaulting
+### User repaying or defaulting
 
 * When the borrower repays the loan, the repayment is made directly to the PWN intent adaptor which permits the Solver to call `claimLoan` on the PWN intent adaptor contract and receive their inventory and any extra in return for their loan.
 * Should the borrower not repay the loan, the Solver will still call `claimLoan` on the PWN intent adaptor contract, however in this case it will trigger a process to reclaim the collateral from PWN by calling `claimLOAN`.
 * For a single chain loan, the same contract is used for both repaying and claiming. For cross chain loans, it's anticipated (since this isn't supported in PWN yet) that claiming of returned inventory will occur on the loan / destination chain whereas reclaiming the collateral will be performed on the source chain. There will likely need to be some attestation as to the state of the loan provided to enable cross chain synchornisation of state within PWN contracts.
+
+## Cross chain with Intents
+
+Contracts on each supported chain operate as Intent adaptors wrapping PWN loan requests and fufilments in a convenient interface that is accessible to Solver networks. These Solvers like to events emitted on each chain they want to fill, maintain their on inventory which they will stage between chains according to their strategies and then submit loan fulfilments directly on the destination chain of the loan.
+
+Intent adaptors work as a optimistic FCFS auction with only the first fulfilment being accepted for a particular loan offer.
+
+In our design an additional actor is required in the form of an API watcher which takes advertised loans and forwards them directly to the PWN intent adaptor contract. This entity is an additional source of trust as Solvers must believe that the orderflow presented by this actor is genuine and any inventory sent to fulfil these loans will be repaid. There are two solutions to this additional trust actor:
+
+- firstly PWN could submit all loan requests directly on-chain (either by requiring a user to initial an onchain tx OR signing a message which is then batches by the protocol), this completely removes the need for the additional entity bearing trust
+- or, by making the API watcher a decentralised permissionless entity using an EigenLayer [AVS](https://app.eigenlayer.xyz/avs) or using an [ICP capsule](https://internetcomputer.org/how-it-works) to query the API and then post the data back on chain directly
+
+PWN synchronisation between chains as to the state of cross chain loans is a further consideration that was outside the scope of this project given the extrapolated nature of as yet unimplementing functionality. Potential solutions include:
+
+- PWN or and AVS attesting to the fulfilment event on the loan chain on the collateral chain to ensure state synchronicity
+- Use of canonical bridges to send batch state change messages periodically
+
+Cross chain execution is optimistic as the destination chain accepts the loan information provided by the solver and forwards the inventory. There is a risk if this is not checked before inventory is supplied, however given the non-time sensitive nature of the execution it's possible for the contract on the destination chain to wait for a state synchonrisation event from the loan chain to verify the loan details are correct. This removes the risk from the Solving party providing inventory for nonexistant or cancelled loans.
 
 # Partners / bounties
 
