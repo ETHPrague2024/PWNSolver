@@ -99,10 +99,13 @@ Mantle : [0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93](https://explorer.sepolia.m
 
 [Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
 
-Deployed subgraph: https://thegraph.com/studio/subgraph/pwn-graph/
+Deployed subgraph: https://testnet.thegraph.com/explorer/subgraphs/GWRoHvkHuuih5ims2RraW4TH5Vn2cnftifv1FLWF2dvE?view=Overview&chain=arbitrum-sepolia
 
-Subgraph code: https://github.com/ETHPrague2024/thegraph
+Subgraph code: https://github.com/ETHPrague2024/thegraph/tree/main/pwn-graph
 
 How the subgraph is used:
+The subgraph indexes the entire history of loans from PWN contracts, serving two key purposes:
+- Portfolio Credit Risk Assessment: Historical data from The Graph is used to calculate traditional risk metrics such as probability of default, loss given default, and exposure at default, following best practices from the traditional financial system.
+- PD Model Training: Historical data is utilized to train a model that predicts the probability of default for potential new loans, enhancing risk assessment capabilities.
 
-🏗️ Indexed PWN contracts to calculate and assess credit history of address requesting a loan portfolio. Calculation of credit metrics probability of default, loss exposure default and loss given default, taking these methodologies from traditional financial system best practicies to drive decision making within the Solver as to which loans to underwrite. 🏗️
+
