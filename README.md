@@ -17,8 +17,8 @@ Reversing the polarity of Banks with x-chain Intents. Made with ❤️ in Prague
 * Support for supplying PWN loans cross chain
     - NOTE: this extends the base functionality assuming PWN emits loan offers with loan token requests on different chains, for now this part is simulated in the code to work around this limitation
 
-* Mechanism for assessing credit worthiness of borrowers based on chain activity and collateral supplied
-    - using The Graph to index PWN contracts to assess credit history of portolio and calculate credit metrics probability of default, exposure at default and loss given default, taking these methodologies from traditional financial system best practicies
+* Mechanism for assessing credit risk of borrowers and whole portfolio based on chain activity and collateral supplied
+    - using The Graph to index PWN contracts to assess credit history of portolio and calculate credit risk metrics, based on traditional financial system best practicies, plus developed logistic regression model to predict default probabilities (trained on real data) and create credit scores expert model for better lending decisions
 
 # Overview
 
@@ -40,7 +40,12 @@ A summary of system interactions by time is shown below using colour coding and 
 
 ## Credit risker evaluates risk of loan
 
-To calculate the risk of loans, we have adopted metrics and ideas from traditional finance. Using The Graph, we indexed the entire history of loans. This data allows us to calculate crucial risk metrics such as observed default rate, loss given default, and exposure at default. In traditional finance, these metrics are essential for risk management of a portfolio and for calculating capital and provisions. They provide a deeper understanding of the risk and potential losses for liquidity providers (LPs).
+To calculate loan risk, we've incorporated traditional finance metrics and added three core features:
+ - Portfolio Credit Risk Metrics: Using The Graph to gather the entire transaction history, we calculate metrics to monitor and manage the risk of **existed loans**, providing valuable insights for LPs.
+ - PD Model for New Loans: We trained a logistic regression model on historical data to evaluate the probability of default (PD) for **new loans**, offering LPs a clearer understanding of loan risk.
+ - On-Chain Credit Scores: By analyzing on-chain data, we calculate credit scores to facilitate data-driven decisions for **new loan** funding.
+
+Using The Graph, we indexed the entire history of loans. This data allows us to calculate crucial risk metrics such as observed default rate, loss given default, and exposure at default. In traditional finance, these metrics are essential for risk management of a portfolio and for calculating capital and provisions. They provide a deeper understanding of the risk and potential losses for liquidity providers (LPs).
 
 With this indexed data, we developed a model to calculate the probability of default for potential loans using logistic regression. This model, trained on historical data, helps predict the likelihood of default for each loan. This information enables LPs to better understand and assess the potential risk of loans before making decisions.
 
