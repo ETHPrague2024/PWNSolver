@@ -40,7 +40,7 @@ A summary of system interactions by time is shown below using colour coding and 
 
 ## Credit risker evaluates risk of loan
 
-🏗️ Section about how this works 🏗️
+To evaluate the risk of the loan, an expert model was created. The risk parameters used include the user's on-chain data such as the first transaction date, the number of tokens held, the current value, the total value of transactions, and NFTs. Accounts with more activity and funds receive a higher rating. This data is obtained from Etherscan. Customers with the worst rating (5) will unfortunately be rejected from granting the loan. In the future, more advanced credit scoring models could potentially be used.
 
 ## Solver assessing risk and underwriting loan
 
