@@ -72,13 +72,18 @@ Example of how the exanple Solver detects and fills a loan across multiple chain
 
 # Partners / bounties
 
+## Main Track 
+[Decentralized Community Resilience Award](https://ethprague2024.devfolio.co/prizes)
+
+Celebrating projects that empower communities through decentralized technologies, tackling topics such as public goods provision, DAO governance, regenerative finance, and open-source innovation.
+
 ## PWN
 
 [Mortgage solution on PWN](https://ducttapeevents.notion.site/PWN-dcc9d2c5ec8c43a6a080997b92a56ce7)
 
 Intent adaptor contracts:
 * Sepolia : [0x0cb8f458ee463674ccc190dda4067f136ada69c2](https://sepolia.etherscan.io/address/0x0cb8f458ee463674ccc190dda4067f136ada69c2)
-* Holsky : [0xa93f9e2ca26af5dbc1538e56b031c367bd200c89](https://holesky.beaconcha.in/address/0xa93f9e2ca26af5dbc1538e56b031c367bd200c89)
+* Holesky : [0xa93f9e2ca26af5dbc1538e56b031c367bd200c89](https://holesky.beaconcha.in/address/0xa93f9e2ca26af5dbc1538e56b031c367bd200c89)
 
 (other chains) ..
 
