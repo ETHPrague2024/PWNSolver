@@ -49,6 +49,8 @@ To calculate loan risk, we've incorporated traditional finance metrics and added
 
 Using The Graph, we indexed the entire history of loans. This data allows us to calculate crucial risk metrics such as observed default rate, loss given default, and exposure at default. In traditional finance, these metrics are essential for risk management of a portfolio and for calculating capital and provisions. They provide a deeper understanding of the risk and potential losses for liquidity providers (LPs).
 
+![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/9e4754cb-027c-4dac-8a1d-8a93df0c28b3)
+
 With this indexed data, we developed a model to calculate the probability of default for potential loans using logistic regression. This model, trained on historical data, helps predict the likelihood of default for each loan. This information enables LPs to better understand and assess the potential risk of loans before making decisions.
 
 Additionally, we created an expert model to calculate a credit score for loan applicants, which aids the solver in making more data-driven decisions. The risk parameters considered include the user's on-chain data such as the first transaction date, the number of tokens held, the current value of holdings, the total value of transactions, and NFTs. Accounts with more activity and funds receive higher ratings. This data is obtained from Etherscan. Customers with the lowest rating (5) will unfortunately be rejected for loans. In the future, we plan to incorporate more advanced credit scoring models.
@@ -115,7 +117,14 @@ Linea : [0x4dc36fcc192c042fc49fe934d86e8942d79c4e93](https://sepolia.lineascan.b
 
 Mantle : [0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93](https://explorer.sepolia.mantle.xyz/address/0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93)
 
+## Optimism
+[Prototype a Superchain Superpower](https://ducttapeevents.notion.site/Optimism-9ea2a5d799764ec7b49bbda3a890fd62)
+
+Optimism : [0x0E293e65a871Bf3bdF6DB2924407DC94D0410BFB](https://sepolia-optimism.etherscan.io/address/0x0e293e65a871bf3bdf6db2924407dc94d0410bfb)
+
 ## The Graph
+
+![image](https://github.com/ETHPrague2024/PWNSolver/assets/70756146/3640fb91-b9c9-48f3-9223-820ece632fee)
 
 [Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
 
