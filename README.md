@@ -92,13 +92,18 @@ Cross chain execution is optimistic as the destination chain accepts the loan in
 
 # Partners / bounties
 
+## Main Track 
+[Decentralized Community Resilience Award](https://ethprague2024.devfolio.co/prizes)
+
+Celebrating projects that empower communities through decentralized technologies, tackling topics such as public goods provision, DAO governance, regenerative finance, and open-source innovation.
+
 ## PWN
 
 [Mortgage solution on PWN](https://ducttapeevents.notion.site/PWN-dcc9d2c5ec8c43a6a080997b92a56ce7)
 
 Intent adaptor contracts:
 * Sepolia : [0x0cb8f458ee463674ccc190dda4067f136ada69c2](https://sepolia.etherscan.io/address/0x0cb8f458ee463674ccc190dda4067f136ada69c2)
-* Holsky : [0xa93f9e2ca26af5dbc1538e56b031c367bd200c89](https://holesky.beaconcha.in/address/0xa93f9e2ca26af5dbc1538e56b031c367bd200c89)
+* Holesky : [0xa93f9e2ca26af5dbc1538e56b031c367bd200c89](https://holesky.beaconcha.in/address/0xa93f9e2ca26af5dbc1538e56b031c367bd200c89)
 
 (other chains) ..
 
@@ -133,8 +138,9 @@ Deployed subgraph: https://testnet.thegraph.com/explorer/subgraphs/GWRoHvkHuuih5
 Subgraph code: https://github.com/ETHPrague2024/thegraph/tree/main/pwn-graph
 
 How the subgraph is used:
-The subgraph indexes the entire history of loans from PWN contracts, serving two key purposes:
+The subgraph indexes the entire history of loans from PWN contracts, serving three key purposes:
 - Portfolio Credit Risk Assessment: Historical data from The Graph is used to calculate traditional risk metrics such as probability of default, loss given default, and exposure at default, following best practices from the traditional financial system.
 - PD Model Training: Historical data is utilized to train a model that predicts the probability of default for potential new loans, enhancing risk assessment capabilities.
+- Accessibility and Innovation: The subgraph allows anyone, anywhere to access indexed historical PWN data and build on top of the protocol, fostering future development and innovation.
 
 
