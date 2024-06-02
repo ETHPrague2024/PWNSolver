@@ -117,7 +117,7 @@ Polygon Cardona : [0x7b6aceC5eA36DD5ef5b0639B8C1d0Dab59DdcF03](https://cardona-z
 ## Linea
 [Build a dapp on Linea](https://ducttapeevents.notion.site/Linea-5b99a158b4744716a1d446b669e65f55)
 
-Linea : [0x4dc36fcc192c042fc49fe934d86e8942d79c4e93](https://sepolia.lineascan.build/address/0x4dc36fcc192c042fc49fe934d86e8942d79c4e93)
+Linea : [0x35461b3ba63Aa1764b46778570D8E369Ea3CFF86](https://sepolia.lineascan.build/address/0x35461b3ba63Aa1764b46778570D8E369Ea3CFF86)
 
 ## Mantle
 [Best DeFi project](https://ducttapeevents.notion.site/Mantle-46e53bc8290242d897a1337cfabded62)
