@@ -86,6 +86,11 @@ Linea : [0x4dc36fcc192c042fc49fe934d86e8942d79c4e93](https://sepolia.lineascan.b
 
 Mantle : [0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93](https://explorer.sepolia.mantle.xyz/address/0x4DC36FCc192c042fC49Fe934D86E8942D79c4e93)
 
+## Optimism
+[Prototype a Superchain Superpower](https://ducttapeevents.notion.site/Optimism-9ea2a5d799764ec7b49bbda3a890fd62)
+
+Optimism : [0x0E293e65a871Bf3bdF6DB2924407DC94D0410BFB](https://sepolia-optimism.etherscan.io/address/0x0e293e65a871bf3bdf6db2924407dc94d0410bfb)
+
 ## The Graph
 
 [Best New Subgraph](https://ducttapeevents.notion.site/The-Graph-081ed2db024e4d80b133da9965616552)
